@@ -1,0 +1,15 @@
+{
+  "parameter_count": 101770,
+  "model_size_mb": 0.38822174072265625,
+  "training_losses": [
+    2.3341747164726256,
+    2.328767201900482,
+    2.328761487007141
+  ],
+  "final_loss": 2.328761487007141,
+  "inference_time_ms": 0.0735920001170598,
+  "peak_memory_mb": 174.88671875,
+  "experiment_name": "baseline_mnist",
+  "timestamp": "2025-12-04T07:34:13.706647",
+  "duration_seconds": 1.3867061138153076
+}

@@ -1,0 +1,42 @@
+[
+    {
+        "batch_size": 16,
+        "training_time": 0.39012742042541504,
+        "final_loss": 0.6292562484741211,
+        "model_size_MB": 0.002292633056640625,
+        "inference_time": 0.0058438777923583984,
+        "memory_usage_MB": 0
+    },
+    {
+        "batch_size": 32,
+        "training_time": 0.23767304420471191,
+        "final_loss": 0.6611237525939941,
+        "model_size_MB": 0.002292633056640625,
+        "inference_time": 0.0,
+        "memory_usage_MB": 0
+    },
+    {
+        "batch_size": 64,
+        "training_time": 0.16639065742492676,
+        "final_loss": 0.6505449414253235,
+        "model_size_MB": 0.002292633056640625,
+        "inference_time": 0.0,
+        "memory_usage_MB": 0
+    },
+    {
+        "batch_size": 128,
+        "training_time": 0.13033747673034668,
+        "final_loss": 0.6810763478279114,
+        "model_size_MB": 0.002292633056640625,
+        "inference_time": 0.0,
+        "memory_usage_MB": 0
+    },
+    {
+        "batch_size": 256,
+        "training_time": 0.14864444732666016,
+        "final_loss": 0.6746553778648376,
+        "model_size_MB": 0.002292633056640625,
+        "inference_time": 0.0,
+        "memory_usage_MB": 0
+    }
+]
