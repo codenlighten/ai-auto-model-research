@@ -186,30 +186,36 @@ Code must train with all batch sizes and compare results.
 
     # FOCUSED HIGH-QUALITY EXPERIMENTS (Designed for 7+/10 breakthrough)
     "pruning_analysis": """
-Comprehensive pruning study with fine-grained analysis.
+Comprehensive pruning study with fine-grained analysis:
 
-CRITICAL: Use ONLY these imports from ml_utils:
-from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
+AVAILABLE ML_UTILS (use ONLY these - do NOT make up functions):
+Classes: SimpleCNN, SimpleMLP, DeepMLP
+Functions: create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table, 
+          evaluate_accuracy, get_model_size, measure_inference_time, train_simple_classifier
 
-IMPLEMENTATION TEMPLATE (copy this structure exactly):
+COMPLETE WORKING CODE TEMPLATE (use this structure):
 
 ```python
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
 
-# Step 1: Create data
+# 1. Create data
+print("Creating synthetic MNIST data...")
 train_loader = create_synthetic_mnist_images(num_samples=2000, batch_size=32)
 test_loader = create_synthetic_mnist_images(num_samples=500, batch_size=32)
 
-# Step 2: Train baseline
+# 2. Train baseline model
+print("\\nTraining baseline CNN...")
 baseline_model = SimpleCNN(input_channels=1, num_classes=10)
-optimizer = torch.optim.Adam(baseline_model.parameters(), lr=0.001)
+optimizer = optim.Adam(baseline_model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
-print("Training baseline model...")
+# Simple training loop (10 epochs)
 for epoch in range(10):
-    for batch_idx, (data, target) in enumerate(train_loader):
+    baseline_model.train()
+    for data, target in train_loader:
         optimizer.zero_grad()
         output = baseline_model(data)
         loss = criterion(output, target)
@@ -217,12 +223,12 @@ for epoch in range(10):
         optimizer.step()
     print(f"Epoch {epoch+1}/10 complete")
 
-# Step 3: Create models dict with baseline
+# 3. Create pruned variants
+print("\\nCreating pruned models...")
 models = {"Baseline (0%)": baseline_model}
 
-# Step 4: Prune at different ratios
 for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
-    # Clone the baseline
+    # Clone baseline
     pruned_model = SimpleCNN(input_channels=1, num_classes=10)
     pruned_model.load_state_dict(baseline_model.state_dict())
     
@@ -230,8 +236,9 @@ for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
     prune_model(pruned_model, pruning_ratio=ratio)
     
     # Fine-tune for 5 epochs
-    optimizer = torch.optim.Adam(pruned_model.parameters(), lr=0.001)
+    optimizer = optim.Adam(pruned_model.parameters(), lr=0.001)
     for epoch in range(5):
+        pruned_model.train()
         for data, target in train_loader:
             optimizer.zero_grad()
             output = pruned_model(data)
@@ -239,27 +246,26 @@ for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
             loss.backward()
             optimizer.step()
     
-    # Store with descriptive name
     models[f"Pruned ({int(ratio*100)}%)"] = pruned_model
+    print(f"Pruned {int(ratio*100)}% model fine-tuned")
 
-# Step 5: Compare all models
-print("\\n" + "="*80)
+# 4. Compare all models
+print("\\nComparing models...")
 results = compare_models(models, test_loader)
 print_comparison_table(results)
 
-# Step 6: RESEARCH INSIGHTS
+# 5. RESEARCH INSIGHTS (REQUIRED)
 print("\\n" + "="*80)
 print("RESEARCH INSIGHTS")
 print("="*80)
-print("1. Key Finding: [Your one-sentence breakthrough discovery]")
-print("2. Practical Recommendation: [Specific pruning ratio advice]")
-print("3. Surprising Result: [What was unexpected in the data]")
-print("4. Future Direction: [Next experiment to try]")
+print("1. Key Finding: [Your discovery here]")
+print("2. Practical Recommendation: [Actionable advice]")
+print("3. Surprising Result: [Unexpected pattern]")
+print("4. Future Direction: [Next experiment]")
 print("="*80)
 ```
 
-Follow this template EXACTLY. Do NOT import functions that don't exist in ml_utils.
-Do NOT try to unpack return values - create_synthetic_mnist_images() returns ONE DataLoader.
+Use this EXACT structure. Do NOT invent functions. Do NOT save/load files.
 """,
 
     "learning_rate_discovery": """
