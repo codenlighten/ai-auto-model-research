@@ -221,11 +221,11 @@ for epoch in range(10):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-    print(f"Epoch {epoch+1}/10 complete")
+    print(f"Epoch {{epoch+1}}/10 complete")
 
 # 3. Create pruned variants
 print("\\nCreating pruned models...")
-models = {"Baseline (0%)": baseline_model}
+models = {{"Baseline (0%)": baseline_model}}
 
 for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
     # Clone baseline
@@ -246,8 +246,8 @@ for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
             loss.backward()
             optimizer.step()
     
-    models[f"Pruned ({int(ratio*100)}%)"] = pruned_model
-    print(f"Pruned {int(ratio*100)}% model fine-tuned")
+    models[f"Pruned ({{int(ratio*100)}}%)"] = pruned_model
+    print(f"Pruned {{int(ratio*100)}}% model fine-tuned")
 
 # 4. Compare all models
 print("\\nComparing models...")
