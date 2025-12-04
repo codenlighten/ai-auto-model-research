@@ -467,6 +467,28 @@ print(f"Training time: {{metrics['training_time']}}s")
             print(f"📦 Dependencies: {', '.join(dependencies) if dependencies else 'None'}")
             print(f"💡 Explanation: {explanation[:200]}...\n")
             
+            # Validate Python syntax before saving
+            try:
+                compile(code, '<string>', 'exec')
+                print("✅ Syntax validation passed")
+            except SyntaxError as e:
+                print(f"⚠️  Syntax error detected: {e}")
+                print(f"   Line {e.lineno}: {e.text}")
+                print("   Attempting to fix common issues...")
+                
+                # Common fix: Replace f-strings with nested single quotes
+                import re
+                # Fix f'...{dict['key']}...' -> f"...{dict['key']}..."
+                fixed_code = re.sub(r"f'([^']*\{[^}]*\[['\"])", r'f"\1', code)
+                fixed_code = re.sub(r"(\[['\"][^}]*\}[^']*)'", r'\1"', fixed_code)
+                
+                try:
+                    compile(fixed_code, '<string>', 'exec')
+                    code = fixed_code
+                    print("✅ Auto-fixed syntax error")
+                except:
+                    print("⚠️  Could not auto-fix, will attempt execution anyway")
+            
             # Save code
             code_file = sprint_dir / "experiment.py"
             with open(code_file, 'w', encoding='utf-8', errors='replace') as f:
@@ -704,6 +726,22 @@ Ensure all types are correct (.long(), .float()).
                             new_code = code_result.get("result", {}).get("code", "")
                             
                             if new_code:
+                                # Validate syntax before saving
+                                try:
+                                    compile(new_code, '<string>', 'exec')
+                                    print("✅ Fixed code syntax validated")
+                                except SyntaxError as e:
+                                    print(f"⚠️  Fixed code still has syntax error: {e}")
+                                    # Try auto-fix
+                                    import re
+                                    new_code = re.sub(r"f'([^']*\{[^}]*\[['\"])", r'f"\1', new_code)
+                                    new_code = re.sub(r"(\[['\"][^}]*\}[^']*)'", r'\1"', new_code)
+                                    try:
+                                        compile(new_code, '<string>', 'exec')
+                                        print("✅ Auto-fixed syntax in regenerated code")
+                                    except:
+                                        print("⚠️  Could not auto-fix regenerated code")
+                                
                                 # Save fixed code
                                 code_file = sprint_dir / "experiment_fixed.py"
                                 with open(code_file, 'w', encoding='utf-8', errors='replace') as f:
