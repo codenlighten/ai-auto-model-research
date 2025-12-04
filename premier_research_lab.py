@@ -190,12 +190,22 @@ Comprehensive pruning study with fine-grained analysis:
 
 AVAILABLE ML_UTILS (use ONLY these - do NOT make up functions):
 Classes: SimpleCNN, SimpleMLP, DeepMLP
-Functions: create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table, 
-          evaluate_accuracy, get_model_size, measure_inference_time, train_simple_classifier
+Functions: 
+  - create_synthetic_mnist_images(num_samples, batch_size) → returns ONE DataLoader for CNN images
+  - create_synthetic_mnist(num_samples, batch_size) → returns ONE DataLoader for MLP (flat vectors)
+  - prune_model(model, pruning_ratio) → prunes model in-place
+  - compare_models(models_dict, test_loader) → returns metrics dict
+  - print_comparison_table(results) → prints comparison table
+  - evaluate_accuracy(model, test_loader) → returns accuracy
+  - get_model_size(model) → returns param count and size
+  - measure_inference_time(model, input_shape) → returns time in ms
 
-COMPLETE WORKING CODE TEMPLATE (use this structure):
+WARNING: create_synthetic_mnist_images() returns ONE loader, NOT two!
+Call it TWICE for train and test:
+  train_loader = create_synthetic_mnist_images(2000, 32)
+  test_loader = create_synthetic_mnist_images(500, 32)
 
-```python
+COMPLETE WORKING CODE TEMPLATE - COPY THIS EXACTLY:```python
 import torch
 import torch.nn as nn
 import torch.optim as optim
