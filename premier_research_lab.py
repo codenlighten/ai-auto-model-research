@@ -186,35 +186,80 @@ Code must train with all batch sizes and compare results.
 
     # FOCUSED HIGH-QUALITY EXPERIMENTS (Designed for 7+/10 breakthrough)
     "pruning_analysis": """
-Comprehensive pruning study with fine-grained analysis:
+Comprehensive pruning study with fine-grained analysis.
 
-IMPLEMENTATION WORKFLOW (follow exactly):
-1. Import: from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
-2. Create data: train_loader = create_synthetic_mnist_images(num_samples=2000, batch_size=32)
-3. Create baseline CNN: baseline_model = SimpleCNN(input_channels=1, num_classes=10)
-4. Train baseline for 10 epochs using torch.optim.Adam (lr=0.001)
-5. For EACH pruning ratio [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
-   - Clone baseline: pruned_model = SimpleCNN(); pruned_model.load_state_dict(baseline_model.state_dict())
-   - Apply pruning: prune_model(pruned_model, pruning_ratio=ratio)
-   - Fine-tune for 5 epochs
-   - Store in models dict with name like "Pruned (30%)"
-6. Use compare_models(models_dict, test_loader) to get all metrics
-7. Use print_comparison_table(results) to display
+CRITICAL: Use ONLY these imports from ml_utils:
+from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
 
-Discover:
-1. Optimal pruning ratio (best accuracy/size tradeoff)
-2. Critical pruning threshold (where accuracy drops >10%)
-3. Inference speedup curve
-4. Model compression ratio
+IMPLEMENTATION TEMPLATE (copy this structure exactly):
 
-CRITICAL - END WITH INSIGHTS SECTION:
-After printing comparison table, add "RESEARCH INSIGHTS" with:
-1. Key Finding: One sentence breakthrough discovery
-2. Practical Recommendation: Actionable advice (e.g., "Use 30-40% pruning for best tradeoff")
-3. Surprising Result: What was unexpected in the data?
-4. Future Direction: What to explore next
+```python
+import torch
+import torch.nn as nn
+from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
 
-Code must execute start-to-finish without saving/loading files.
+# Step 1: Create data
+train_loader = create_synthetic_mnist_images(num_samples=2000, batch_size=32)
+test_loader = create_synthetic_mnist_images(num_samples=500, batch_size=32)
+
+# Step 2: Train baseline
+baseline_model = SimpleCNN(input_channels=1, num_classes=10)
+optimizer = torch.optim.Adam(baseline_model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()
+
+print("Training baseline model...")
+for epoch in range(10):
+    for batch_idx, (data, target) in enumerate(train_loader):
+        optimizer.zero_grad()
+        output = baseline_model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+    print(f"Epoch {epoch+1}/10 complete")
+
+# Step 3: Create models dict with baseline
+models = {"Baseline (0%)": baseline_model}
+
+# Step 4: Prune at different ratios
+for ratio in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
+    # Clone the baseline
+    pruned_model = SimpleCNN(input_channels=1, num_classes=10)
+    pruned_model.load_state_dict(baseline_model.state_dict())
+    
+    # Apply pruning
+    prune_model(pruned_model, pruning_ratio=ratio)
+    
+    # Fine-tune for 5 epochs
+    optimizer = torch.optim.Adam(pruned_model.parameters(), lr=0.001)
+    for epoch in range(5):
+        for data, target in train_loader:
+            optimizer.zero_grad()
+            output = pruned_model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+    
+    # Store with descriptive name
+    models[f"Pruned ({int(ratio*100)}%)"] = pruned_model
+
+# Step 5: Compare all models
+print("\\n" + "="*80)
+results = compare_models(models, test_loader)
+print_comparison_table(results)
+
+# Step 6: RESEARCH INSIGHTS
+print("\\n" + "="*80)
+print("RESEARCH INSIGHTS")
+print("="*80)
+print("1. Key Finding: [Your one-sentence breakthrough discovery]")
+print("2. Practical Recommendation: [Specific pruning ratio advice]")
+print("3. Surprising Result: [What was unexpected in the data]")
+print("4. Future Direction: [Next experiment to try]")
+print("="*80)
+```
+
+Follow this template EXACTLY. Do NOT import functions that don't exist in ml_utils.
+Do NOT try to unpack return values - create_synthetic_mnist_images() returns ONE DataLoader.
 """,
 
     "learning_rate_discovery": """
