@@ -191,6 +191,35 @@ Your role: Analyze experimental outputs, validate correctness, interpret results
 Provide critical feedback, identify issues, suggest improvements.
 Ensure scientific rigor and reproducibility.""",
                 "metadata": {"role": "validator", "specialty": "validation"}
+            },
+            {
+                "name": "DebuggerAgent",
+                "description": "Expert debugger that analyzes errors and provides self-healing solutions",
+                "prompt": """You are an expert debugging specialist with deep knowledge of:
+- Python error analysis (stack traces, exceptions, module errors)
+- PyTorch/ML framework common issues (CUDA, tensor types, memory, device placement)
+- Environment issues (missing packages, version conflicts, path problems)
+- Code fix strategies (type conversions, imports, error handling)
+- Root cause analysis and prevention
+
+Your role: Analyze errors from experiment execution and provide ACTIONABLE fixes.
+
+For each error, provide:
+1. **Root Cause**: What actually caused the error (be specific)
+2. **Immediate Fix**: Exact command(s) or code changes needed
+3. **Prevention**: How to avoid this in the future
+4. **Confidence**: High/Medium/Low on fix success
+
+Common error patterns:
+- ModuleNotFoundError → pip install package
+- Tensor type errors → .long(), .float(), .to(device)
+- Shape mismatches → verify dimensions, add reshaping
+- CUDA errors → device placement, memory management
+- Import errors → check file paths, add to sys.path
+
+Provide terminal commands in PowerShell format when applicable.
+Be concise and actionable - we need to fix and continue quickly.""",
+                "metadata": {"role": "debugger", "specialty": "error-recovery"}
             }
         ]
         
@@ -209,7 +238,7 @@ Ensure scientific rigor and reproducibility.""",
                     print(f"❌ Failed to register {agent_config['name']}: {e}")
                     print(f"   Error details: {error_text[:200]}")
         
-        print(f"\n✅ Team setup complete! {len(registered)}/4 agents ready.\n")
+        print(f"\n✅ Team setup complete! {len(registered)}/5 agents ready.\n")
         return registered
     
     def run_sprint(self, research_goal):
@@ -240,6 +269,18 @@ Ensure scientific rigor and reproducibility.""",
         print("-" * 80)
         implementation = self._phase_implementation(discussion, sprint_dir)
         sprint_data["phases"]["implementation"] = implementation
+        
+        # Self-healing: If implementation failed, attempt recovery
+        if not implementation.get("execution", {}).get("success", False):
+            print("\n🔧 SELF-HEALING: Attempting error recovery...")
+            print("-" * 80)
+            healing_result = self._attempt_self_healing(implementation, discussion, sprint_dir)
+            sprint_data["phases"]["self_healing"] = healing_result
+            
+            # If healing provided a fix, update implementation
+            if healing_result.get("fix_applied", False):
+                implementation = healing_result.get("new_implementation", implementation)
+                sprint_data["phases"]["implementation"] = implementation
         
         # Phase 3: Validation (2 minutes)
         print("\n✅ PHASE 3: Validation & Analysis (2 min)")
@@ -546,6 +587,190 @@ Analyze the results:
         except Exception as e:
             print(f"❌ Validation failed: {e}")
             return {"error": str(e)}
+    
+    def _attempt_self_healing(self, failed_implementation, discussion, sprint_dir, max_attempts=2):
+        """Self-healing mechanism: Analyze errors and attempt fixes"""
+        healing_log = {
+            "attempts": [],
+            "fix_applied": False,
+            "new_implementation": None
+        }
+        
+        execution = failed_implementation.get("execution", {})
+        error_output = execution.get("stderr", "") + "\n" + execution.get("stdout", "")
+        original_code = failed_implementation.get("code", "")
+        
+        for attempt in range(max_attempts):
+            print(f"\n🔍 Healing Attempt {attempt + 1}/{max_attempts}")
+            
+            # Step 1: DebuggerAgent analyzes the error
+            debug_prompt = f"""Analyze this experiment error and provide a fix:
+
+**Original Goal:**
+{discussion.get('action_plan', '')[:500]}
+
+**Error Output:**
+{error_output[:2000]}
+
+**Failed Code:**
+```python
+{original_code[:1500]}
+```
+
+Provide:
+1. **Root Cause**: Exact cause of the error
+2. **Fix Strategy**: What needs to change (code or environment)
+3. **Terminal Commands**: If packages/env changes needed (PowerShell format)
+4. **Code Fix**: If code changes needed, provide the corrected section
+5. **Confidence**: High/Medium/Low
+
+Be specific and actionable."""
+            
+            try:
+                debug_result = self.client.invoke_user_agent("DebuggerAgent", {"userPrompt": debug_prompt})
+                debug_analysis = debug_result.get("result", {}).get("response", "")
+                print(f"🔍 DebuggerAgent analysis:\n{debug_analysis[:500]}...\n")
+                
+                # Step 2: Team consensus on the fix
+                consensus_prompt = f"""DebuggerAgent identified this issue and solution:
+
+{debug_analysis}
+
+As the {"{role}"}, do you:
+1. AGREE with this fix approach? (Yes/No/Partially)
+2. Any concerns or alternative suggestions?
+3. What's your confidence this will work? (High/Medium/Low)
+
+Be brief (2-3 sentences)."""
+                
+                votes = {}
+                agents = ["ResearcherAgent", "ArchitectAgent", "CoderAgent"]
+                
+                for agent in agents:
+                    try:
+                        vote_result = self.client.invoke_user_agent(
+                            agent,
+                            {"userPrompt": consensus_prompt.format(role=agent.replace("Agent", ""))}
+                        )
+                        votes[agent] = vote_result.get("result", {}).get("response", "")
+                        print(f"   {agent}: {votes[agent][:100]}...")
+                    except Exception as e:
+                        print(f"   {agent}: Error - {e}")
+                        votes[agent] = "Error"
+                
+                # Step 3: Apply fix if consensus
+                agreement_count = sum(1 for v in votes.values() if "yes" in v.lower() or "agree" in v.lower())
+                
+                if agreement_count >= 2:  # Majority agrees
+                    print(f"\n✅ Consensus reached ({agreement_count}/3 agree). Applying fix...")
+                    
+                    # Check if terminal commands needed
+                    if "pip install" in debug_analysis.lower() or "install" in debug_analysis.lower():
+                        # Extract package name
+                        import re
+                        packages = re.findall(r'pip install ([a-zA-Z0-9_-]+)', debug_analysis)
+                        if packages:
+                            print(f"📦 Installing packages: {packages}")
+                            # Note: In production, we'd execute this
+                            # For now, log it
+                            healing_log["attempts"].append({
+                                "attempt": attempt + 1,
+                                "analysis": debug_analysis,
+                                "votes": votes,
+                                "action": f"Would install: {packages}",
+                                "consensus": "yes"
+                            })
+                    
+                    # If code fix suggested, regenerate code
+                    if "code" in debug_analysis.lower() and "fix" in debug_analysis.lower():
+                        print("🔨 Regenerating code with fix...")
+                        
+                        fix_prompt = f"""Based on this error analysis:
+
+{debug_analysis}
+
+Regenerate the COMPLETE experiment code with the fix applied.
+Use the ml_utils when possible.
+Ensure all types are correct (.long(), .float()).
+
+{discussion.get('action_plan', '')[:500]}"""
+                        
+                        try:
+                            code_result = self.client.code_generator(
+                                prompt=fix_prompt,
+                                context={"language": "python", "includeTests": False}
+                            )
+                            
+                            new_code = code_result.get("result", {}).get("code", "")
+                            
+                            if new_code:
+                                # Save fixed code
+                                code_file = sprint_dir / "experiment_fixed.py"
+                                with open(code_file, 'w') as f:
+                                    f.write(new_code)
+                                
+                                # Copy ml_utils
+                                import shutil
+                                ml_utils_src = Path(__file__).parent / "ml_utils.py"
+                                if ml_utils_src.exists():
+                                    ml_utils_dst = sprint_dir / "ml_utils.py"
+                                    shutil.copy(ml_utils_src, ml_utils_dst)
+                                
+                                # Execute fixed code
+                                print("🚀 Executing fixed code...")
+                                fixed_execution = self._execute_python(code_file, sprint_dir)
+                                
+                                if fixed_execution.get("success", False):
+                                    print("✅ Self-healing successful!")
+                                    healing_log["fix_applied"] = True
+                                    healing_log["new_implementation"] = {
+                                        "code": new_code,
+                                        "execution": fixed_execution
+                                    }
+                                    healing_log["attempts"].append({
+                                        "attempt": attempt + 1,
+                                        "analysis": debug_analysis,
+                                        "votes": votes,
+                                        "action": "code_regenerated",
+                                        "consensus": "yes",
+                                        "success": True
+                                    })
+                                    return healing_log
+                                else:
+                                    print(f"⚠️  Fix didn't work. Error: {fixed_execution.get('stderr', '')[:200]}")
+                                    error_output = fixed_execution.get("stderr", "")
+                                    healing_log["attempts"].append({
+                                        "attempt": attempt + 1,
+                                        "analysis": debug_analysis,
+                                        "votes": votes,
+                                        "action": "code_regenerated",
+                                        "consensus": "yes",
+                                        "success": False
+                                    })
+                        except Exception as e:
+                            print(f"❌ Code regeneration failed: {e}")
+                            healing_log["attempts"].append({
+                                "attempt": attempt + 1,
+                                "error": str(e)
+                            })
+                else:
+                    print(f"⚠️  No consensus ({agreement_count}/3). Skipping fix.")
+                    healing_log["attempts"].append({
+                        "attempt": attempt + 1,
+                        "analysis": debug_analysis,
+                        "votes": votes,
+                        "consensus": "no"
+                    })
+                    
+            except Exception as e:
+                print(f"❌ Healing attempt {attempt + 1} failed: {e}")
+                healing_log["attempts"].append({
+                    "attempt": attempt + 1,
+                    "error": str(e)
+                })
+        
+        print("\n⚠️  Self-healing unsuccessful after all attempts.")
+        return healing_log
 
 
 def main():
