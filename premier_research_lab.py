@@ -188,12 +188,18 @@ Code must train with all batch sizes and compare results.
     "pruning_analysis": """
 Comprehensive pruning study with fine-grained analysis:
 
-Test pruning ratios: 10%, 20%, 30%, 40%, 50%, 60%, 70%
-Train baseline SimpleCNN for 10 epochs on 2000 samples
-For each pruning ratio:
-  - Apply magnitude pruning  
-  - Fine-tune for 5 epochs
-  - Measure accuracy, size, inference time
+IMPLEMENTATION WORKFLOW (follow exactly):
+1. Import: from ml_utils import SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models, print_comparison_table
+2. Create data: train_loader = create_synthetic_mnist_images(num_samples=2000, batch_size=32)
+3. Create baseline CNN: baseline_model = SimpleCNN(input_channels=1, num_classes=10)
+4. Train baseline for 10 epochs using torch.optim.Adam (lr=0.001)
+5. For EACH pruning ratio [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
+   - Clone baseline: pruned_model = SimpleCNN(); pruned_model.load_state_dict(baseline_model.state_dict())
+   - Apply pruning: prune_model(pruned_model, pruning_ratio=ratio)
+   - Fine-tune for 5 epochs
+   - Store in models dict with name like "Pruned (30%)"
+6. Use compare_models(models_dict, test_loader) to get all metrics
+7. Use print_comparison_table(results) to display
 
 Discover:
 1. Optimal pruning ratio (best accuracy/size tradeoff)
@@ -201,47 +207,39 @@ Discover:
 3. Inference speedup curve
 4. Model compression ratio
 
-Output: Complete comparison table + visualization-ready data + insights on pruning sweet spot.
-Code must be clean, well-documented, and produce publication-quality results.
-Use ml_utils: SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models
-
 CRITICAL - END WITH INSIGHTS SECTION:
-After printing all metrics, add a "RESEARCH INSIGHTS" section with:
+After printing comparison table, add "RESEARCH INSIGHTS" with:
 1. Key Finding: One sentence breakthrough discovery
-2. Practical Recommendation: Actionable advice for practitioners
-3. Surprising Result: What was unexpected?
+2. Practical Recommendation: Actionable advice (e.g., "Use 30-40% pruning for best tradeoff")
+3. Surprising Result: What was unexpected in the data?
 4. Future Direction: What to explore next
-Make insights clear, specific, and valuable.
+
+Code must execute start-to-finish without saving/loading files.
 """,
 
     "learning_rate_discovery": """
 Systematic learning rate optimization study:
 
-Test learning rates: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-Train SimpleMLP on 2000 samples for 15 epochs each
-Track for each LR:
-  - Final accuracy
-  - Training stability (loss variance)
-  - Convergence speed (epochs to 90% of final performance)
-  - Overfitting tendency
-
-Discover:
-1. Optimal LR for fast convergence
-2. LR ranges that cause instability
-3. Sweet spot for accuracy vs speed
-4. Relationship between LR and generalization
-
-Output: Detailed analysis with convergence curves, stability metrics, and actionable recommendations.
-Code must include proper validation split and statistical analysis.
-Use ml_utils: SimpleMLP, create_synthetic_mnist, train_simple_classifier, evaluate_accuracy
+IMPLEMENTATION WORKFLOW (follow exactly):
+1. Import: from ml_utils import SimpleMLP, create_synthetic_mnist, evaluate_accuracy
+2. Create data: train_loader = create_synthetic_mnist(2000, batch_size=32); test_loader = create_synthetic_mnist(500, batch_size=32)
+3. Test LRs: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
+4. For EACH learning rate:
+   - Create fresh model: model = SimpleMLP(input_dim=784, hidden_dim=128, output_dim=10)
+   - Create optimizer: optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+   - Train 15 epochs, track: epoch_losses, final_accuracy, convergence_epoch
+   - Store results in dict: results[f'LR={lr}'] = {...}
+5. Print comparison table with all metrics
+6. Calculate: best_lr, stable_range, convergence_analysis
 
 CRITICAL - END WITH INSIGHTS SECTION:
-After printing all metrics, add a "RESEARCH INSIGHTS" section with:
-1. Key Finding: One sentence breakthrough discovery about learning rate
-2. Practical Recommendation: Best LR range for this architecture
-3. Surprising Result: Non-obvious pattern in convergence behavior
-4. Future Direction: How to extend this analysis
-Make insights clear, specific, and valuable for ML practitioners.
+Print "RESEARCH INSIGHTS" with:
+1. Key Finding: Optimal LR and why (e.g., "LR=0.001 converges 2x faster than LR=0.0001")
+2. Practical Recommendation: Best LR range for SimpleMLP architecture
+3. Surprising Result: Non-obvious pattern (e.g., "High LR converged but with high variance")
+4. Future Direction: Next experiments (e.g., "Test adaptive LR schedules")
+
+Code must run end-to-end, no file I/O except printing results.
 """,
 
     "architecture_depth_study": """
