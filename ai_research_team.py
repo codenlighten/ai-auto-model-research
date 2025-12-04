@@ -469,7 +469,7 @@ print(f"Training time: {{metrics['training_time']}}s")
             
             # Save code
             code_file = sprint_dir / "experiment.py"
-            with open(code_file, 'w') as f:
+            with open(code_file, 'w', encoding='utf-8', errors='replace') as f:
                 f.write(code)
             
             # Copy ml_utils.py to experiment directory for imports
@@ -706,7 +706,7 @@ Ensure all types are correct (.long(), .float()).
                             if new_code:
                                 # Save fixed code
                                 code_file = sprint_dir / "experiment_fixed.py"
-                                with open(code_file, 'w') as f:
+                                with open(code_file, 'w', encoding='utf-8', errors='replace') as f:
                                     f.write(new_code)
                                 
                                 # Copy ml_utils

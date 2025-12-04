@@ -182,6 +182,99 @@ Track for each:
 Goal: Find sweet spot that maximizes throughput without OOM.
 
 Code must train with all batch sizes and compare results.
+""",
+
+    # FOCUSED HIGH-QUALITY EXPERIMENTS (Designed for 7+/10 breakthrough)
+    "pruning_analysis": """
+Comprehensive pruning study with fine-grained analysis:
+
+Test pruning ratios: 10%, 20%, 30%, 40%, 50%, 60%, 70%
+Train baseline SimpleCNN for 10 epochs on 2000 samples
+For each pruning ratio:
+  - Apply magnitude pruning  
+  - Fine-tune for 5 epochs
+  - Measure accuracy, size, inference time
+
+Discover:
+1. Optimal pruning ratio (best accuracy/size tradeoff)
+2. Critical pruning threshold (where accuracy drops >10%)
+3. Inference speedup curve
+4. Model compression ratio
+
+Output: Complete comparison table + visualization-ready data + insights on pruning sweet spot.
+Code must be clean, well-documented, and produce publication-quality results.
+Use ml_utils: SimpleCNN, create_synthetic_mnist_images, prune_model, compare_models
+
+CRITICAL - END WITH INSIGHTS SECTION:
+After printing all metrics, add a "RESEARCH INSIGHTS" section with:
+1. Key Finding: One sentence breakthrough discovery
+2. Practical Recommendation: Actionable advice for practitioners
+3. Surprising Result: What was unexpected?
+4. Future Direction: What to explore next
+Make insights clear, specific, and valuable.
+""",
+
+    "learning_rate_discovery": """
+Systematic learning rate optimization study:
+
+Test learning rates: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
+Train SimpleMLP on 2000 samples for 15 epochs each
+Track for each LR:
+  - Final accuracy
+  - Training stability (loss variance)
+  - Convergence speed (epochs to 90% of final performance)
+  - Overfitting tendency
+
+Discover:
+1. Optimal LR for fast convergence
+2. LR ranges that cause instability
+3. Sweet spot for accuracy vs speed
+4. Relationship between LR and generalization
+
+Output: Detailed analysis with convergence curves, stability metrics, and actionable recommendations.
+Code must include proper validation split and statistical analysis.
+Use ml_utils: SimpleMLP, create_synthetic_mnist, train_simple_classifier, evaluate_accuracy
+
+CRITICAL - END WITH INSIGHTS SECTION:
+After printing all metrics, add a "RESEARCH INSIGHTS" section with:
+1. Key Finding: One sentence breakthrough discovery about learning rate
+2. Practical Recommendation: Best LR range for this architecture
+3. Surprising Result: Non-obvious pattern in convergence behavior
+4. Future Direction: How to extend this analysis
+Make insights clear, specific, and valuable for ML practitioners.
+""",
+
+    "architecture_depth_study": """
+Study impact of network depth on performance:
+
+Create MLPs with depths: 2, 3, 4, 5, 6, 7, 8 layers
+Keep total parameters ~constant (~130K) by adjusting width
+Train each for 12 epochs on 2000 samples
+
+Measure:
+1. Training time per epoch
+2. Final validation accuracy
+3. Overfitting gap (train vs val accuracy)
+4. Inference latency
+5. Parameter efficiency
+
+Discover:
+1. Optimal depth for this problem
+2. Point of diminishing returns
+3. Depth vs overfitting relationship  
+4. Depth vs training efficiency
+
+Output: Complete analysis showing depth sweet spot with statistical significance testing.
+Code must implement all depths cleanly using PyTorch nn.Sequential and ml_utils helpers.
+Use ml_utils: create_synthetic_mnist, get_model_size, measure_inference_time, evaluate_accuracy
+
+CRITICAL - END WITH INSIGHTS SECTION:
+After printing all metrics, add a "RESEARCH INSIGHTS" section with:
+1. Key Finding: Optimal depth and why it matters
+2. Practical Recommendation: Depth guidelines for similar problems
+3. Surprising Result: Unexpected relationship between depth and performance
+4. Future Direction: Next architecture experiments to try
+Make insights actionable and backed by the data.
 """
 }
 
